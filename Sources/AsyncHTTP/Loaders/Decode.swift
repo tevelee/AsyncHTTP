@@ -5,6 +5,10 @@ extension Loader where Output: Decodable {
     public func decode<DecodedOutput, Decoder: TopLevelDecoder>(using decoder: Decoder, to type: DecodedOutput.Type = DecodedOutput.self) -> Loaders.Decoded<Self, DecodedOutput, Decoder> where Decoder.Input == Output {
         Loaders.Decoded<Self, DecodedOutput, Decoder>(self, decoder: decoder)
     }
+
+    public func decode<DecodedOutput>(using decoder: JSONDecoder = JSONDecoder(), to type: DecodedOutput.Type = DecodedOutput.self) -> Loaders.Decoded<Self, DecodedOutput, JSONDecoder> {
+        Loaders.Decoded<Self, DecodedOutput, JSONDecoder>(self, decoder: decoder)
+    }
 }
 
 extension Loaders {

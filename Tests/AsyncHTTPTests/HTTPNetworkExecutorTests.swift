@@ -1,5 +1,6 @@
-import XCTest
 import AsyncHTTP
+import Combine
+import XCTest
 
 final class HTTPNetworkExecutorTests: XCTestCase {
     let testLoader = AnyLoader { _ in (Data(), .dummy()) }.http
@@ -59,7 +60,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         let httpLoader: some HTTPLoader = AnyLoader { _ in (Data(#"{"key": "value"}"#.utf8), .dummy()) }.http
         let loader: AnyLoader<HTTPRequest, CustomResponse> = httpLoader
             .map(\.body)
-            .decode(using: JSONDecoder(), to: CustomResponse.self)
+            .decode()
             .eraseToAnyLoader()
 
         // When
@@ -67,6 +68,16 @@ final class HTTPNetworkExecutorTests: XCTestCase {
 
         // Then
         XCTAssertEqual(output, CustomResponse(key: "value"))
+    }
+
+    func test_combine() async throws {
+        // Given
+
+        // When
+        let output = try await testLoader.loadPublisher(HTTPRequest()).asyncSingle()
+
+        // Then
+        XCTAssertEqual(output.response.statusCode, 200)
     }
 }
 
@@ -85,5 +96,44 @@ extension String: Error {}
 private extension Int {
     func `in`(_ range: Range<Int>) -> Bool {
         range.contains(self)
+    }
+}
+
+private extension Publisher where Failure == Error {
+    func asyncStream() -> AsyncThrowingStream<Output, Error> {
+        .init { continuation in
+            let cancellable = sink { completion in
+                switch completion {
+                    case .finished:
+                        continuation.finish()
+                    case .failure(let error):
+                        continuation.finish(throwing: error)
+                }
+            } receiveValue: { value in
+                continuation.yield(value)
+            }
+            continuation.onTermination = { @Sendable _ in
+                cancellable.cancel()
+            }
+        }
+    }
+
+    func asyncSingle() async throws -> Output {
+        var cancellable: AnyCancellable?
+        let value: Output = try await withCheckedThrowingContinuation { continuation in
+            var output: Output!
+            cancellable = sink { completion in
+                switch completion {
+                    case .finished:
+                        continuation.resume(returning: output)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                }
+            } receiveValue: { value in
+                output = value
+            }
+        }
+        cancellable?.cancel()
+        return value
     }
 }

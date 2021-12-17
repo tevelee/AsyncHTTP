@@ -22,3 +22,24 @@ public protocol CompositeLoader: Loader {
 }
 
 public enum Loaders {}
+
+#if canImport(Combine)
+import Combine
+
+extension Loader {
+    public func loadPublisher(_ input: Input) -> Deferred<Future<Output, Error>> {
+        Deferred {
+            Future { promise in
+                Task { @MainActor in
+                    do {
+                        let result = try await self.load(input)
+                        promise(.success(result))
+                    } catch {
+                        promise(.failure(error))
+                    }
+                }
+            }
+        }
+    }
+}
+#endif
