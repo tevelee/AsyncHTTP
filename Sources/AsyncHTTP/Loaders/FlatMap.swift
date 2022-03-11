@@ -24,3 +24,5 @@ extension Loaders {
         }
     }
 }
+
+extension Loaders.FlatMap: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}

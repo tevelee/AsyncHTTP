@@ -50,10 +50,10 @@ final class HTTPNetworkExecutorTests: XCTestCase {
 
         // Then
         XCTAssertEqual(loadedRequest?.url?.absoluteString, "https://prod.example.com/v1/endpoint?q=search&sid=1")
-        XCTAssertEqual(loadedRequest?.headers["Accept"], "application/json; charset=\"utf-8\"")
-        XCTAssertEqual(loadedRequest?.headers["Authorization"], "Bearer token")
-        XCTAssertEqual(loadedRequest?.headers["X-API-KEY"], "test")
-        XCTAssertEqual(loadedRequest?.headers["X-Header"], "value")
+        XCTAssertEqual(loadedRequest?[header: "Accept"], "application/json; charset=\"utf-8\"")
+        XCTAssertEqual(loadedRequest?[header: "Authorization"], "Bearer token")
+        XCTAssertEqual(loadedRequest?[header: "X-API-KEY"], "test")
+        XCTAssertEqual(loadedRequest?[header: "X-Header"], "value")
         XCTAssertEqual(loadedRequest?.body.content, Data(#"{"a":"b"}"#.utf8))
     }
 
@@ -62,13 +62,14 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         struct CustomResponse: Decodable, Equatable {
             let key: String
         }
-        let loader: some HTTPLoader = AnyLoader { _ in (Data(#"{"key": "value"}"#.utf8), .dummy()) }.http
+        let loader: some HTTPLoader = AnyLoader { _ in (Data(#"{"key": "value"}"#.utf8), .dummy(headers: ["User-Agent": "X"])) }.http
 
         // When
         let output = try await loader.load(HTTPRequest())
 
         // Then
         XCTAssertEqual(try output.jsonBody(), CustomResponse(key: "value"))
+        XCTAssertEqual(output[header: .userAgent], "X")
     }
 
     func test_whenDecodingLoader_thenItSucceeds() async throws {
@@ -96,7 +97,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         let output = try await testLoader.loadPublisher(HTTPRequest()).asyncSingle()
 
         // Then
-        XCTAssertEqual(output.response.statusCode, 200)
+        XCTAssertEqual(output.statusCode, 200)
     }
 }
 
@@ -105,8 +106,8 @@ private extension ServerEnvironment {
 }
 
 private extension URLResponse {
-    static func dummy(url: URL = URL(string: "test")!, statusCode: Int = 200) -> HTTPURLResponse {
-        HTTPURLResponse(url: url, statusCode: statusCode, httpVersion: nil, headerFields: nil)!
+    static func dummy(url: URL = URL(string: "test")!, statusCode: Int = 200, headers: [String: String]? = nil) -> HTTPURLResponse {
+        HTTPURLResponse(url: url, statusCode: statusCode, httpVersion: nil, headerFields: headers)!
     }
 }
 

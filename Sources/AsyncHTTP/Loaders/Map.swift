@@ -23,3 +23,5 @@ extension Loaders {
         }
     }
 }
+
+extension Loaders.Map: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}

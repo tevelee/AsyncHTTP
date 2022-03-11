@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 
-@dynamicMemberLookup
 public struct HTTPResponse {
     public let request: HTTPRequest
     public let response: HTTPURLResponse
@@ -15,7 +14,15 @@ public struct HTTPResponse {
         try decodedBody(using: decoder)
     }
 
-    public subscript<T>(dynamicMember keyPath: KeyPath<HTTPURLResponse, T>) -> T {
-        response[keyPath: keyPath]
+    public var statusCode: Int {
+        response.statusCode
+    }
+
+    public var allHeaderFields: [AnyHashable: Any] {
+        response.allHeaderFields
+    }
+
+    public subscript(header header: HTTPHeader<String>) -> String? {
+        response.value(forHTTPHeaderField: header.name)
     }
 }
