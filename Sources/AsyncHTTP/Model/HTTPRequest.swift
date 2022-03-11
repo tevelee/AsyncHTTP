@@ -3,7 +3,7 @@ import Foundation
 public struct HTTPRequest: Equatable, Hashable, Sendable {
     public var method: HTTPMethod
     public var headers: [HTTPHeader<String>: String]
-    public var body: HTTPBody
+    public var body: HTTPRequestBody
     public var version: HTTPVersion
     public var url: URL? { urlComponents.url }
     private var options: [ObjectIdentifier: AnyHashable] = [:]
@@ -12,7 +12,7 @@ public struct HTTPRequest: Equatable, Hashable, Sendable {
     public init(method: HTTPMethod = .get,
                 headers: [HTTPHeader<String>: String] = [:],
                 version: HTTPVersion = .default,
-                body: HTTPBody = .empty) {
+                body: HTTPRequestBody = .empty) {
         self.method = method
         self.headers = headers
         self.urlComponents = URLComponents()
@@ -26,7 +26,7 @@ public struct HTTPRequest: Equatable, Hashable, Sendable {
                  url: URL,
                  headers: [HTTPHeader<String>: String] = [:],
                  version: HTTPVersion = .default,
-                 body: HTTPBody = .empty) {
+                 body: HTTPRequestBody = .empty) {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             return nil
         }

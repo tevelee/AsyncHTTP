@@ -49,10 +49,24 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         XCTAssertEqual(loadedRequest?.headers["Authorization"], "Bearer token")
         XCTAssertEqual(loadedRequest?.headers["X-API-KEY"], "test")
         XCTAssertEqual(loadedRequest?.headers["X-Header"], "value")
-        XCTAssertEqual(loadedRequest?.body.content, "{\"a\":\"b\"}".data(using: .utf8))
+        XCTAssertEqual(loadedRequest?.body.content, Data(#"{"a":"b"}"#.utf8))
     }
 
-    func test_whenDecoding_thenItSucceeds() async throws {
+    func test_whenDecodingResponse_thenItSucceeds() async throws {
+        // Given
+        struct CustomResponse: Decodable, Equatable {
+            let key: String
+        }
+        let loader: some HTTPLoader = AnyLoader { _ in (Data(#"{"key": "value"}"#.utf8), .dummy()) }.http
+
+        // When
+        let output = try await loader.load(HTTPRequest())
+
+        // Then
+        XCTAssertEqual(try output.jsonBody(), CustomResponse(key: "value"))
+    }
+
+    func test_whenDecodingLoader_thenItSucceeds() async throws {
         // Given
         struct CustomResponse: Decodable, Equatable {
             let key: String

@@ -7,6 +7,17 @@ public struct Timeout: ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, E
         self.maximumDuration = maximumDuration
     }
 
+    public init(maximumDuration: Measurement<UnitDuration>) {
+        self.maximumDuration = maximumDuration.converted(to: .seconds).value
+    }
+
+    public init?(maximumDuration: DispatchTimeInterval) {
+        guard let duration = TimeInterval(dispatchTimeInterval: maximumDuration) else {
+            return nil
+        }
+        self.maximumDuration = duration
+    }
+
     public init(floatLiteral value: FloatLiteralType) {
         self.init(maximumDuration: value)
     }
@@ -71,5 +82,24 @@ extension Loaders.ApplyTimeout: HTTPLoader where Input == HTTPRequest, Output ==
 extension Task where Success == Never, Failure == Never {
     public static func sleep(seconds: TimeInterval) async throws {
         try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+    }
+}
+
+extension TimeInterval {
+    init?(dispatchTimeInterval: DispatchTimeInterval) {
+        switch dispatchTimeInterval {
+            case .seconds(let value):
+                self = Double(value)
+            case .milliseconds(let value):
+                self = Double(value) / 1_000
+            case .microseconds(let value):
+                self = Double(value) / 1_000_000
+            case .nanoseconds(let value):
+                self = Double(value) / 1_000_000_000
+            case .never:
+                return nil
+            default:
+                return nil
+        }
     }
 }
