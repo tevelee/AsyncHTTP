@@ -7,20 +7,20 @@ extension Loader {
 }
 
 extension Loaders {
-    public struct Pipe<Downstream: Loader, Upstream: Loader>: Loader where Downstream.Output == Upstream.Input {
-        public typealias Input = Downstream.Input
-        public typealias Output = Upstream.Output
+    public struct Pipe<Upstream: Loader, Downstream: Loader>: Loader where Upstream.Output == Downstream.Input {
+        public typealias Input = Upstream.Input
+        public typealias Output = Downstream.Output
 
-        private let downstream: Downstream
         private let upstream: Upstream
+        private let downstream: Downstream
 
-        init(_ downstrean: Downstream, _ upstream: Upstream) {
-            self.downstream = downstrean
+        init(_ upstream: Upstream, _ downstream: Downstream) {
             self.upstream = upstream
+            self.downstream = downstream
         }
 
         public func load(_ input: Input) async throws -> Output {
-            try await upstream.load(downstream.load(input))
+            try await downstream.load(upstream.load(input))
         }
     }
 }

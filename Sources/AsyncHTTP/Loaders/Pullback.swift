@@ -13,8 +13,8 @@ extension Loaders {
         private let downstream: Downstream
         private let transform: (Input) -> Downstream.Input
 
-        init(_ downstrean: Downstream, _ transform: @escaping (Input) -> Downstream.Input) {
-            self.downstream = downstrean
+        init(_ downstream: Downstream, _ transform: @escaping (Input) -> Downstream.Input) {
+            self.downstream = downstream
             self.transform = transform
         }
 

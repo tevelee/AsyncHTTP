@@ -12,19 +12,19 @@ extension Loader where Output: Decodable {
 }
 
 extension Loaders {
-    public struct Decoded<Downstream: Loader, DecodedOutput: Decodable, Decoder: TopLevelDecoder>: Loader where Decoder.Input == Downstream.Output {
-        public typealias Input = Downstream.Input
+    public struct Decoded<Upstream: Loader, DecodedOutput: Decodable, Decoder: TopLevelDecoder>: Loader where Decoder.Input == Upstream.Output {
+        public typealias Input = Upstream.Input
 
-        private let downstream: Downstream
+        private let upstream: Upstream
         private let decoder: Decoder
 
-        init(_ downstrean: Downstream, decoder: Decoder) {
-            self.downstream = downstrean
+        init(_ upstream: Upstream, decoder: Decoder) {
+            self.upstream = upstream
             self.decoder = decoder
         }
 
         public func load(_ input: Input) async throws -> DecodedOutput {
-            let output = try await downstream.load(input)
+            let output = try await upstream.load(input)
             return try decoder.decode(DecodedOutput.self, from: output)
         }
     }

@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@dynamicMemberLookup
 public struct HTTPResponse {
     public let request: HTTPRequest
     public let response: HTTPURLResponse
@@ -12,5 +13,9 @@ public struct HTTPResponse {
 
     public func jsonBody<T: Decodable>(using decoder: JSONDecoder = JSONDecoder(), type: T.Type = T.self) throws -> T {
         try decodedBody(using: decoder)
+    }
+
+    public subscript<T>(dynamicMember keyPath: KeyPath<HTTPURLResponse, T>) -> T {
+        response[keyPath: keyPath]
     }
 }

@@ -34,7 +34,12 @@ final class HTTPNetworkExecutorTests: XCTestCase {
             .capture { loadedRequest = $0 }
             .applyServerEnvironment()
             .applyTimeout()
-            .flatMap { $0.response.statusCode.in(200 ..< 300) ? .success($0) : .failure("not 2XX response code") }
+            .map { response in
+                guard response.statusCode.in(200 ..< 300) else {
+                    throw "not 2XX response code"
+                }
+                return response
+            }
             .intercept { $0.headers["X-Header"] = "value" }
 //            .delay(seconds: 10)
             .deduplicate()

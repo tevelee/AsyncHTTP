@@ -7,19 +7,19 @@ extension Loader {
 }
 
 extension Loaders {
-    public struct Map<Downstream: Loader, Output>: Loader {
-        public typealias Input = Downstream.Input
+    public struct Map<Upstream: Loader, Output>: Loader {
+        public typealias Input = Upstream.Input
 
-        private let downstream: Downstream
-        private let transform: (Downstream.Output) throws -> Output
+        private let upstream: Upstream
+        private let transform: (Upstream.Output) throws -> Output
 
-        init(_ downstrean: Downstream, _ transform: @escaping (Downstream.Output) throws -> Output) {
-            self.downstream = downstrean
+        init(_ upstream: Upstream, _ transform: @escaping (Upstream.Output) throws -> Output) {
+            self.upstream = upstream
             self.transform = transform
         }
 
         public func load(_ input: Input) async throws -> Output {
-            try await transform(downstream.load(input))
+            try await transform(upstream.load(input))
         }
     }
 }
