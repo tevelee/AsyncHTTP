@@ -46,8 +46,8 @@ final class HTTPNetworkExecutorTests: XCTestCase {
 //            .delay(seconds: 10)
             .deduplicate()
             .throttle(maximumNumberOfRequests: 1)
-            .identified()
-            .checked()
+            .identifyRequests()
+            .validateRequests()
 
         // When
         let response = try await loader.load(request)
@@ -61,7 +61,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         XCTAssertEqual(loadedRequest?[header: "X-Header"], "value")
         XCTAssertEqual(loadedRequest?.body.content, Data(#"{"a":"b"}"#.utf8))
         XCTAssertNotNil(loadedRequest?.id)
-        XCTAssertEqual(loadedRequest?.id, response.request.id)
+        XCTAssertEqual(loadedRequest?.id, response.id)
     }
 
     func test_whenDecodingResponse_thenItSucceeds() async throws {

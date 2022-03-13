@@ -26,3 +26,9 @@ public struct HTTPResponse {
         response.value(forHTTPHeaderField: header.name)
     }
 }
+
+extension HTTPResponse: Identifiable {
+    public var id: HTTPRequest.ID {
+        request.id
+    }
+}

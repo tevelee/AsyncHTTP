@@ -1,13 +1,13 @@
 import Foundation
 
 extension Loader where Input == HTTPRequest, Output == HTTPResponse {
-    public func checked() -> Loaders.Checked<Self> {
-        Loaders.Checked<Self>(self)
+    public func validateRequests() -> Loaders.ValidateRequests<Self> {
+        Loaders.ValidateRequests<Self>(self)
     }
 }
 
 extension Loaders {
-    public struct Checked<Upstream: Loader>: HTTPLoader where Upstream.Input == HTTPRequest, Upstream.Output == HTTPResponse {
+    public struct ValidateRequests<Upstream: Loader>: HTTPLoader where Upstream.Input == HTTPRequest, Upstream.Output == HTTPResponse {
         private let upstream: Upstream
 
         init(_ upstream: Upstream) {
