@@ -6,6 +6,7 @@ public struct HTTPRequest: Equatable, Hashable, Sendable {
     public var body: HTTPRequestBody
     public var version: HTTPVersion
     public var url: URL? { urlComponents.url }
+
     private var options: [ObjectIdentifier: AnyHashable] = [:]
     private var urlComponents = URLComponents()
 

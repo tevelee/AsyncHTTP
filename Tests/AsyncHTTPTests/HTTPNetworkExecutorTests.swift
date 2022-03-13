@@ -20,6 +20,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         // Given
         let request = try HTTPRequest().configured {
             $0.path = "endpoint"
+            $0.method = .get
             $0.body = try .json(["a": "b"])
             $0[header: .accept] = .application.json.appending(.characterSet, value: .utf8)
             $0[header: .authorization] = .bearer(token: "token")
@@ -34,8 +35,9 @@ final class HTTPNetworkExecutorTests: XCTestCase {
             .capture { loadedRequest = $0 }
             .applyServerEnvironment()
             .applyTimeout()
+            .applyRetryStrategy()
             .map { response in
-                guard response.status.code.in(200 ..< 300) else {
+                guard (200 ..< 300).contains(response.status.code) else {
                     throw "not 2XX response code"
                 }
                 return response
@@ -44,12 +46,14 @@ final class HTTPNetworkExecutorTests: XCTestCase {
 //            .delay(seconds: 10)
             .deduplicate()
             .throttle(maximumNumberOfRequests: 1)
+            .checked()
 
         // When
         _ = try await loader.load(request)
 
         // Then
         XCTAssertEqual(loadedRequest?.url?.absoluteString, "https://prod.example.com/v1/endpoint?q=search&sid=1")
+        XCTAssertEqual(loadedRequest?.method, "GET")
         XCTAssertEqual(loadedRequest?[header: "Accept"], "application/json; charset=\"utf-8\"")
         XCTAssertEqual(loadedRequest?[header: "Authorization"], "Bearer token")
         XCTAssertEqual(loadedRequest?[header: "X-API-KEY"], "test")
@@ -113,12 +117,6 @@ private extension URLResponse {
 }
 
 extension String: Error {}
-
-private extension Int {
-    func `in`(_ range: Range<Int>) -> Bool {
-        range.contains(self)
-    }
-}
 
 private extension Publisher where Failure == Error {
     func asyncStream() -> AsyncThrowingStream<Output, Error> {

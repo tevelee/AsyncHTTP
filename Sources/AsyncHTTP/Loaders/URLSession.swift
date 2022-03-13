@@ -4,6 +4,10 @@ extension URLSession {
     public var data: Loaders.URLSessionData {
         .init(urlSession: self)
     }
+
+    public var http: Loaders.HTTP<Loaders.URLSessionData> {
+        data.http
+    }
 }
 
 extension Loaders {
