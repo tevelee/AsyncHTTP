@@ -56,7 +56,7 @@ extension Loaders {
 
         init(loader: Wrapped,
              timeout: @escaping (Input) -> Timeout? = { _ in nil },
-             wait: @escaping (TimeInterval) async throws -> Void = { try await Task.sleep(seconds: $0) }) {
+             wait: @escaping (TimeInterval) async throws -> Void = Task.sleep) {
             self.loader = loader
             self.timeout = timeout
             self.wait = wait

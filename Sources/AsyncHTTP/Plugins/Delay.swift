@@ -14,7 +14,7 @@ extension Loaders {
 
         init(loader: Wrapped,
              seconds duration: TimeInterval,
-             wait: @escaping (TimeInterval) async throws -> Void = { try await Task.sleep(seconds: $0) }) {
+             wait: @escaping (TimeInterval) async throws -> Void = Task.sleep) {
             self.loader = loader
             self.duration = duration
             self.wait = wait

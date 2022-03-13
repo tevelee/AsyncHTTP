@@ -46,10 +46,11 @@ final class HTTPNetworkExecutorTests: XCTestCase {
 //            .delay(seconds: 10)
             .deduplicate()
             .throttle(maximumNumberOfRequests: 1)
+            .identified()
             .checked()
 
         // When
-        _ = try await loader.load(request)
+        let response = try await loader.load(request)
 
         // Then
         XCTAssertEqual(loadedRequest?.url?.absoluteString, "https://prod.example.com/v1/endpoint?q=search&sid=1")
@@ -59,6 +60,8 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         XCTAssertEqual(loadedRequest?[header: "X-API-KEY"], "test")
         XCTAssertEqual(loadedRequest?[header: "X-Header"], "value")
         XCTAssertEqual(loadedRequest?.body.content, Data(#"{"a":"b"}"#.utf8))
+        XCTAssertNotNil(loadedRequest?.id)
+        XCTAssertEqual(loadedRequest?.id, response.request.id)
     }
 
     func test_whenDecodingResponse_thenItSucceeds() async throws {

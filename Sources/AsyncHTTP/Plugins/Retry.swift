@@ -93,7 +93,7 @@ extension Loaders {
         init(loader: Wrapped,
              retryStrategy: @escaping (Input) -> RetryStrategy? = { _ in nil },
              numberOfPreviousAttempts: Int = 0,
-             wait: @escaping (TimeInterval) async throws -> Void = { try await Task.sleep(seconds: $0) }) {
+             wait: @escaping (TimeInterval) async throws -> Void = Task.sleep) {
             self.loader = loader
             self.retryStrategy = retryStrategy
             self.numberOfPreviousAttempts = numberOfPreviousAttempts
