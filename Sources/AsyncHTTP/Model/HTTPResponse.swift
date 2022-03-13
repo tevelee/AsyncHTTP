@@ -14,12 +14,12 @@ public struct HTTPResponse {
         try decodedBody(using: decoder)
     }
 
-    public var statusCode: Int {
-        response.statusCode
+    public var status: HTTPStatus {
+        HTTPStatus(code: response.statusCode)
     }
 
-    public var allHeaderFields: [AnyHashable: Any] {
-        response.allHeaderFields
+    public var headers: [HTTPHeader<String>: String] {
+        Dictionary(grouping: response.allHeaderFields) { HTTPHeader(name: $0.key.description) }.compactMapValues { $0.first?.value as? String }
     }
 
     public subscript(header header: HTTPHeader<String>) -> String? {

@@ -42,7 +42,7 @@ public struct HTTPRequest: Equatable, Hashable, Sendable {
             return nil
         }
         var request = URLRequest(url: url)
-        request.httpMethod = method.standardFormat
+        request.httpMethod = method.httpFormatted()
         return request
     }
 

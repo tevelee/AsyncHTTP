@@ -16,7 +16,7 @@ extension Loaders {
 
         public func load(_ request: HTTPRequest) async throws -> HTTPResponse {
             guard let urlRequest = request.urlRequest else {
-                throw Error.invalidRequest
+                throw Self.Error.invalidRequest
             }
             let (data, response) = try await loader.load(urlRequest)
 

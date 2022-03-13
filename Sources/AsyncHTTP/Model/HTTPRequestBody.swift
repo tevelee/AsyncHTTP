@@ -61,7 +61,7 @@ extension HTTPRequestBody: ExpressibleByStringLiteral {
         return .data(content, contentType: .application.json.appending(.characterSet, value: .utf8))
     }
 
-    public static func json(_ object: Any, options: JSONSerialization.WritingOptions = []) throws -> HTTPRequestBody {
+    public static func json(_ object: Any, options: JSONSerialization.WritingOptions = [.sortedKeys]) throws -> HTTPRequestBody {
         let content = try JSONSerialization.data(withJSONObject: object, options: options)
         return .data(content, contentType: .application.json.appending(.characterSet, value: .utf8))
     }

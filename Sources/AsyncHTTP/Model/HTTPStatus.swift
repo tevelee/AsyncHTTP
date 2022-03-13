@@ -1,13 +1,13 @@
 import Foundation
 
 public struct HTTPStatus: Equatable, Hashable, Codable {
-    private let code: Int
+    public let code: Int
 
     public init(code: Int) {
         self.code = code
     }
 
-    var message: String {
+    public var message: String {
         switch code {
             case 200:
                 return "OK"

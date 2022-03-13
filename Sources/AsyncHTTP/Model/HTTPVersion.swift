@@ -1,18 +1,14 @@
 import Foundation
 
-public struct HTTPVersion: Equatable, Hashable, Codable, RawRepresentable, Sendable {
-    public let rawValue: String
+public struct HTTPVersion: Equatable, Hashable, Codable, Sendable {
+    internal let rawValue: String
 
-    public init(rawValue: String) {
+    private init(_ rawValue: String) {
         self.rawValue = rawValue
     }
 
     public init(version: Double) {
         rawValue = NumberFormatter.httpVersion.string(from: NSNumber(value: version)) ?? String(version)
-    }
-
-    public var standardFormat: String {
-        "HTTP/\(rawValue)"
     }
 }
 
@@ -24,6 +20,7 @@ private extension NumberFormatter {
     }
 
     static let httpVersion = NumberFormatter().configured {
+        $0.locale = Locale(identifier: "en_US_POSIX")
         $0.allowsFloats = false
         $0.alwaysShowsDecimalSeparator = true
         $0.minimumFractionDigits = 1

@@ -1,55 +1,5 @@
 import Foundation
 
-public struct Converter<Raw, Converted> {
-    public let convert: (Raw) -> Converted
-
-    public init(convert: @escaping (Raw) -> Converted) {
-        self.convert = convert
-    }
-}
-
-public typealias Formatter<Raw> = Converter<Raw, String>
-
-public protocol HTTPFormattible {
-    func httpFormatted() -> String
-}
-
-extension String: HTTPFormattible {
-    public func httpFormatted() -> String {
-        self
-    }
-}
-
-extension Date: HTTPFormattible {
-    public func httpFormatted() -> String {
-        DateFormatter.http.string(from: self)
-    }
-}
-
-extension Locale: HTTPFormattible {
-    public func httpFormatted() -> String {
-        identifier
-    }
-}
-
-extension Int: HTTPFormattible {
-    public func httpFormatted() -> String {
-        String(self)
-    }
-}
-
-extension HTTPMethod: HTTPFormattible {
-    public func httpFormatted() -> String {
-        standardFormat
-    }
-}
-
-extension MIMEType: HTTPFormattible {
-    public func httpFormatted() -> String {
-        rawValue
-    }
-}
-
 public struct HTTPHeader<Value: HTTPFormattible>: Equatable, Hashable, Codable, Sendable {
     public let name: String
 
@@ -102,10 +52,27 @@ extension DateFormatter {
         return copy
     }
 
-    static let http = DateFormatter().configured {
+    public static let http = DateFormatter().configured {
+        $0.locale = Locale(identifier: "en_US_POSIX")
         $0.calendar = Calendar(identifier: .gregorian)
         $0.timeZone = TimeZone(secondsFromGMT: 0)
         $0.dateFormat = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+    }
+}
+
+extension Date: Formattible {}
+
+extension Formatter where Self == DateFormatter {
+    public static var http: DateFormatter {
+        DateFormatter.http
+    }
+}
+
+extension DateFormatter: Formatter {
+    public typealias RawValue = Date
+
+    public func format(_ date: Date) -> String {
+        string(from: date)
     }
 }
 

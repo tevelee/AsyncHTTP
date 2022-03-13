@@ -66,7 +66,7 @@ final class ConvertedTests: XCTestCase {
     }
 }
 
-private extension String {
+extension String {
     var data: Data {
         Data(utf8)
     }

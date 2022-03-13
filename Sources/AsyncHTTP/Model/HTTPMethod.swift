@@ -1,9 +1,11 @@
 import Foundation
 
-public struct HTTPMethod: Equatable, Hashable, Sendable {
-    private let rawValue: String
+public struct HTTPMethod: Equatable, Hashable, Sendable, RawRepresentable {
+    public let rawValue: String
 
-    var standardFormat: String { rawValue.uppercased() }
+    public init(rawValue: String) {
+        self.rawValue = rawValue
+    }
 }
 
 extension HTTPMethod: ExpressibleByStringLiteral {

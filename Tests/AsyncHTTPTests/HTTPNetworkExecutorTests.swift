@@ -1,16 +1,16 @@
-import AsyncHTTP
+@testable import AsyncHTTP
 import Combine
 import XCTest
 
 final class HTTPNetworkExecutorTests: XCTestCase {
-    let testLoader = AnyLoader { _ in (Data(), .dummy()) }.http
+    private let testLoader = StaticLoader(Data(), .dummy())
 
-    func test_whenLoadingURLSessionLoader_thenCallsURLSessionDataTask() async throws {
+    func test_whenLoadingURLSessionLoader_thenCallsURLSessionDataTask() {
         // Given
         let request = HTTPRequest(url: URL(string: "https://google.com")!)!
 
         // When
-        let response = try await testLoader.load(request)
+        let response = testLoader.load(request)
 
         // Then
         XCTAssertEqual(response.request, request)
@@ -35,7 +35,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
             .applyServerEnvironment()
             .applyTimeout()
             .map { response in
-                guard response.statusCode.in(200 ..< 300) else {
+                guard response.status.code.in(200 ..< 300) else {
                     throw "not 2XX response code"
                 }
                 return response
@@ -62,7 +62,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         struct CustomResponse: Decodable, Equatable {
             let key: String
         }
-        let loader: some HTTPLoader = AnyLoader { _ in (Data(#"{"key": "value"}"#.utf8), .dummy(headers: ["User-Agent": "X"])) }.http
+        let loader: some HTTPLoader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy(headers: ["User-Agent": "X"]))
 
         // When
         let output = try await loader.load(HTTPRequest())
@@ -77,7 +77,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         struct CustomResponse: Decodable, Equatable {
             let key: String
         }
-        let httpLoader: some HTTPLoader = AnyLoader { _ in (Data(#"{"key": "value"}"#.utf8), .dummy()) }.http
+        let httpLoader: some HTTPLoader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy())
         let loader: AnyLoader<HTTPRequest, CustomResponse> = httpLoader
             .map(\.body)
             .decode()
@@ -97,7 +97,8 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         let output = try await testLoader.loadPublisher(HTTPRequest()).asyncSingle()
 
         // Then
-        XCTAssertEqual(output.statusCode, 200)
+        XCTAssertEqual(output.status.code, 200)
+        XCTAssertEqual(output.status.message, "OK")
     }
 }
 
@@ -157,3 +158,19 @@ private extension Publisher where Failure == Error {
         return value
     }
 }
+
+private struct StaticLoader: Loader {
+    let data: Data
+    let response: HTTPURLResponse
+
+    init(_ data: Data, _ response: HTTPURLResponse) {
+        self.data = data
+        self.response = response
+    }
+
+    func load(_ request: HTTPRequest) -> HTTPResponse {
+        HTTPResponse(request: request, response: response, body: data)
+    }
+}
+
+extension StaticLoader: HTTPLoader {}
