@@ -29,12 +29,12 @@ extension HTTPRequestBody: ExpressibleByStringLiteral {
 
     public static let empty = HTTPRequestBody(content: Data())
 
-    public static func string(_ content: String, contentType: MIMEType) -> HTTPRequestBody {
+    public static func string(_ content: String, contentType: MIMEType = .text.plain) -> HTTPRequestBody {
         .data(content.data(using: .utf8) ?? Data(), contentType: contentType)
     }
 
     public static func data(_ content: Data, contentType: MIMEType) -> HTTPRequestBody {
-        HTTPRequestBody(content: content, header: .contentType, .text.plain)
+        HTTPRequestBody(content: content, header: .contentType, contentType)
     }
 
     public static func text(_ content: String) -> HTTPRequestBody {

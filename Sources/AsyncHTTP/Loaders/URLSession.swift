@@ -6,7 +6,7 @@ extension URLSession {
     }
 
     public var http: Loaders.HTTP<Loaders.URLSessionData> {
-        data.http
+        data.http()
     }
 }
 

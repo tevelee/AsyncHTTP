@@ -15,6 +15,18 @@ public struct ServerEnvironment: Hashable {
         self.headers = headers
         self.query = query
     }
+
+    func apply(to components: URLComponents) -> URLComponents {
+        var urlComponents = components
+        urlComponents.host = host
+        urlComponents.path = pathPrefix.prefixIfNeeded(with: "/") + urlComponents.path.prefixIfNeeded(with: "/")
+        urlComponents.queryItems = query + urlComponents.queryItems
+        return urlComponents
+    }
+
+    func apply(to headers: [HTTPHeader<String>: String]) -> [HTTPHeader<String>: String] {
+        headers.merging(self.headers) { old, _ in old }
+    }
 }
 
 public enum ServerEnvironmentOption: HTTPRequestOption {
@@ -47,13 +59,7 @@ extension Loaders {
 
         public func load(_ request: HTTPRequest) async throws -> Wrapped.Output {
             return try await loader.load(request.configured { request in
-                guard let environment = request.serverEnvironment ?? defaultEnvironment else {
-                    return
-                }
-                request.host = environment.host
-                request.path = environment.pathPrefix.prefixIfNeeded(with: "/") + request.path.prefixIfNeeded(with: "/")
-                request.query = environment.query + request.query
-                request.headers = environment.headers + request.headers
+                request.serverEnvironment = request.serverEnvironment ?? defaultEnvironment
             })
         }
     }
@@ -72,14 +78,6 @@ private func +(lhs: [URLQueryItem]?, rhs: [URLQueryItem]?) -> [URLQueryItem]? {
         case (.none, .none):
             return nil
     }
-}
-
-private func +(lhs: [HTTPHeader<String>: String], rhs: [HTTPHeader<String>: String]) -> [HTTPHeader<String>: String] {
-    var result = lhs
-    for (key, value) in rhs {
-        result[key] = value
-    }
-    return result
 }
 
 private extension String {

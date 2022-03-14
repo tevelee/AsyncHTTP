@@ -18,12 +18,24 @@ public struct HTTPResponse {
         HTTPStatus(code: response.statusCode)
     }
 
+    public var url: URL? {
+        response.url
+    }
+
     public var headers: [HTTPHeader<String>: String] {
-        Dictionary(grouping: response.allHeaderFields) { HTTPHeader(name: $0.key.description) }.compactMapValues { $0.first?.value as? String }
+        response.allHeaderFields.mapKeys { HTTPHeader<String>(name: $0.description) }.compactMapValues { $0 as? String }
     }
 
     public subscript(header header: HTTPHeader<String>) -> String? {
         response.value(forHTTPHeaderField: header.name)
+    }
+
+    public var cookies: [HTTPCookie]? {
+        let headers = self.headers.mapKeys(\.name)
+        guard let url = url, !headers.isEmpty else {
+            return nil
+        }
+        return HTTPCookie.cookies(withResponseHeaderFields: headers, for: url)
     }
 }
 

@@ -38,6 +38,8 @@ public extension HTTPHeader where Value == String {
     static let contentEncoding: Self = "Content-Encoding"
     static let contentLocation: Self = "Content-Location"
     static let contentTransferEncoding: Self = "Content-Transfer-Encoding"
+    static let cookie: Self = "Cookie"
+    static let setCookie: Self = "Set-Cookie"
 }
 
 public extension HTTPHeader where Value == Locale {

@@ -1,7 +1,7 @@
 import Foundation
 
 extension Loader where Input == URLRequest, Output == (Data, URLResponse) {
-    public var http: Loaders.HTTP<Self> { .init(loader: self) }
+    public func http(modify: ((HTTPRequest, inout URLRequest) -> Void)? = nil) -> Loaders.HTTP<Self> { .init(loader: self, modify: modify) }
 }
 
 public protocol HTTPLoader: Loader where Input == HTTPRequest, Output == HTTPResponse {}
@@ -9,15 +9,18 @@ public protocol HTTPLoader: Loader where Input == HTTPRequest, Output == HTTPRes
 extension Loaders {
     public struct HTTP<Wrapped: Loader>: CompositeLoader, HTTPLoader where Wrapped.Input == URLRequest, Wrapped.Output == (Data, URLResponse) {
         private let loader: Wrapped
+        private let modify: ((HTTPRequest, inout URLRequest) -> Void)?
 
-        public init(loader: Wrapped) {
+        public init(loader: Wrapped, modify: ((HTTPRequest, inout URLRequest) -> Void)? = nil) {
             self.loader = loader
+            self.modify = modify
         }
 
         public func load(_ request: HTTPRequest) async throws -> HTTPResponse {
-            guard let urlRequest = request.urlRequest else {
+            guard var urlRequest = request.urlRequest else {
                 throw Self.Error.invalidRequest
             }
+            modify?(request, &urlRequest)
             let (data, response) = try await loader.load(urlRequest)
 
             guard let response = response as? HTTPURLResponse else {

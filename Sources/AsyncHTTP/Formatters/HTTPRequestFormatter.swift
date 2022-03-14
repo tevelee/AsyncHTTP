@@ -28,7 +28,7 @@ public class CURLHTTPRequestFormatter: Formatter {
         var result: String = "curl"
         result += " --request \(request.method.httpFormatted())"
         for (key, value) in request.headers.sorted(by: \.key.name) {
-            result += " --header \"\(key.httpFormatted()): \(value.httpFormatted())\""
+            result += " --header \"\(key.httpFormatted()): \(value.httpFormatted().replacingOccurrences(of: #"""#, with: #"\""#))\""
         }
         let body = request.body.httpFormatted()
         if !body.isEmpty {

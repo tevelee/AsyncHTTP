@@ -17,9 +17,6 @@ extension Loaders {
         public func load(_ request: HTTPRequest) async throws -> HTTPResponse {
             let output = try await upstream.load(request)
             let type = String(describing: type(of: self))
-            if request.serverEnvironment != nil, !type.contains("ApplyServerEnvironment<") {
-                throw Self.Error.loaderShouldContainApplyServerEnvironment
-            }
             if request.timeout != nil, !type.contains("ApplyTimeout<") {
                 throw Self.Error.loaderShouldContainApplyTimeout
             }
@@ -30,7 +27,6 @@ extension Loaders {
         }
 
         public enum Error: Swift.Error {
-            case loaderShouldContainApplyServerEnvironment
             case loaderShouldContainApplyTimeout
             case loaderShouldContainApplyRetryStrategy
         }
