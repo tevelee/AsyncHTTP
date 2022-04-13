@@ -1,4 +1,6 @@
+#if canImport(Combine)
 import Combine
+#endif
 import Foundation
 
 public struct HTTPRequestBody: Equatable, Hashable, Sendable {

@@ -1,12 +1,30 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
 
 extension URLSession {
-    public var data: Loaders.URLSessionData {
+    func data(for urlRequest: URLRequest) async throws -> (Data, URLResponse) {
+        try await withCheckedThrowingContinuation { continuation in
+            let task = dataTask(with: urlRequest) { data, response, error in
+                guard let data = data, let response = response else {
+                    let error = error ?? URLError(.badServerResponse)
+                    return continuation.resume(throwing: error)
+                }
+                continuation.resume(returning: (data, response))
+            }
+            task.resume()
+        }
+    }
+}
+#endif
+
+extension URLSession {
+    public var dataLoader: Loaders.URLSessionData {
         .init(urlSession: self)
     }
 
-    public var http: Loaders.HTTP<Loaders.URLSessionData> {
-        data.http()
+    public var httpLoader: Loaders.HTTP<Loaders.URLSessionData> {
+        dataLoader.httpLoader()
     }
 }
 

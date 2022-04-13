@@ -1,5 +1,10 @@
+#if canImport(Combine)
 import Combine
+#endif
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public struct HTTPResponse {
     public let request: HTTPRequest

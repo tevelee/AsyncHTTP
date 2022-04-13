@@ -1,7 +1,10 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 extension Loader where Input == URLRequest, Output == (Data, URLResponse) {
-    public func http(modify: ((HTTPRequest, inout URLRequest) -> Void)? = nil) -> Loaders.HTTP<Self> { .init(loader: self, modify: modify) }
+    public func httpLoader(modify: ((HTTPRequest, inout URLRequest) -> Void)? = nil) -> Loaders.HTTP<Self> { .init(loader: self, modify: modify) }
 }
 
 public protocol HTTPLoader: Loader where Input == HTTPRequest, Output == HTTPResponse {}

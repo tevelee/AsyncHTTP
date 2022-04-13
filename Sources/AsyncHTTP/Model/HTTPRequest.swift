@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public struct HTTPRequest: Equatable, Hashable, Sendable {
     public var method: HTTPMethod

@@ -42,7 +42,7 @@ final class HTTPFormatterTests: XCTestCase {
                                           statusCode: 404,
                                           httpVersion: nil,
                                           headerFields: ["Content-Type": "application/json"])!
-        let testLoader = AnyLoader { _ in (#"{"a": "b", "c": null, "d": 1, "e": [true, false]}"#.data, urlResponse) }.http()
+        let testLoader = AnyLoader { _ in (#"{"a": "b", "c": null, "d": 1, "e": [true, false]}"#.data, urlResponse) }.httpLoader()
         let response = try await testLoader.load(HTTPRequest())
 
         // When

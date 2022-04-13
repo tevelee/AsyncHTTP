@@ -1,5 +1,4 @@
 @testable import AsyncHTTP
-import Combine
 import XCTest
 
 final class HTTPNetworkExecutorTests: XCTestCase {
@@ -104,24 +103,13 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         XCTAssertEqual(output, CustomResponse(key: "value"))
     }
 
-    func test_combine() async throws {
-        // Given
-
-        // When
-        let output = try await testLoader.loadPublisher(HTTPRequest()).asyncSingle()
-
-        // Then
-        XCTAssertEqual(output.status.code, 200)
-        XCTAssertEqual(output.status.message, "OK")
-    }
-
     func test_modifyURLRequest() async throws {
         // Given
         var loadedRequest: URLRequest?
         let loader = AnyLoader { request in
             loadedRequest = request
             return (Data(), .dummy())
-        }.http { request, urlRequest in
+        }.httpLoader { request, urlRequest in
             if let cachePolicy = request.cachePolicy {
                 urlRequest.cachePolicy = cachePolicy
             }
@@ -153,68 +141,13 @@ private extension ServerEnvironment {
     static let production = Self(host: "prod.example.com", pathPrefix: "v1", headers: ["X-API-KEY": "test"])
 }
 
-private extension URLResponse {
+extension URLResponse {
     static func dummy(url: URL = URL(string: "test")!, statusCode: Int = 200, headers: [String: String]? = nil) -> HTTPURLResponse {
         HTTPURLResponse(url: url, statusCode: statusCode, httpVersion: nil, headerFields: headers)!
     }
 }
 
 extension String: Error {}
-
-private extension Publisher where Failure == Error {
-    func asyncStream() -> AsyncThrowingStream<Output, Error> {
-        .init { continuation in
-            let cancellable = sink { completion in
-                switch completion {
-                    case .finished:
-                        continuation.finish()
-                    case .failure(let error):
-                        continuation.finish(throwing: error)
-                }
-            } receiveValue: { value in
-                continuation.yield(value)
-            }
-            continuation.onTermination = { @Sendable _ in
-                cancellable.cancel()
-            }
-        }
-    }
-
-    func asyncSingle() async throws -> Output {
-        var cancellable: AnyCancellable?
-        let value: Output = try await withCheckedThrowingContinuation { continuation in
-            var output: Output!
-            cancellable = sink { completion in
-                switch completion {
-                    case .finished:
-                        continuation.resume(returning: output)
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
-                }
-            } receiveValue: { value in
-                output = value
-            }
-        }
-        cancellable?.cancel()
-        return value
-    }
-}
-
-private struct StaticLoader: Loader {
-    let data: Data
-    let response: HTTPURLResponse
-
-    init(_ data: Data, _ response: HTTPURLResponse) {
-        self.data = data
-        self.response = response
-    }
-
-    func load(_ request: HTTPRequest) -> HTTPResponse {
-        HTTPResponse(request: request, response: response, body: data)
-    }
-}
-
-extension StaticLoader: HTTPLoader {}
 
 private extension HTTPCookie {
     static let test1 = HTTPCookie(properties: [

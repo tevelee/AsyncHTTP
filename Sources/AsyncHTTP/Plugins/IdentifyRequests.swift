@@ -20,21 +20,19 @@ extension HTTPRequest: Identifiable {
 }
 
 extension Loader {
-    public func identifyRequests(generateIdentifier: @escaping (HTTPRequest) -> String = generateUUID) -> Loaders.ApplyRequestIdentity<Self> where Input == HTTPRequest {
+    public func identifyRequests(generateIdentifier: @escaping (HTTPRequest) -> String = { _ in UUID().uuidString }) -> Loaders.ApplyRequestIdentity<Self> where Input == HTTPRequest {
         .init(loader: self, generateIdentifier: generateIdentifier)
     }
 }
 
-public let generateUUID: (HTTPRequest) -> String = { _ in UUID().uuidString }
 
 extension Loaders {
     public struct ApplyRequestIdentity<Wrapped: Loader>: CompositeLoader where Wrapped.Input == HTTPRequest {
-
         private let loader: Wrapped
         private let generateIdentifier: (HTTPRequest) -> String
 
         init(loader: Wrapped,
-             generateIdentifier: @escaping (HTTPRequest) -> String = generateUUID) {
+             generateIdentifier: @escaping (HTTPRequest) -> String = { _ in UUID().uuidString }) {
             self.loader = loader
             self.generateIdentifier = generateIdentifier
         }

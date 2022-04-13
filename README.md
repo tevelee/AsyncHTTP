@@ -15,7 +15,7 @@ let request = try HTTPRequest().configured { request in
     request.retryStrategy = .immediately(maximumNumberOfAttempts: 3)
 }
 
-let loader: some HTTPLoader = URLSession.shared.http
+let loader: some HTTPLoader = URLSession.shared.httpLoader()
     .applyServerEnvironment()
     .applyTimeout(default: 30)
     .applyRetryStrategy()
@@ -23,7 +23,7 @@ let loader: some HTTPLoader = URLSession.shared.http
     .throttle(maximumNumberOfRequests: 2)
 
 let response: HTTPResponse = try await loader.load(request)
-let body: MyResponseStruct = response.jsonBody()
+let body: MyResponseStruct = try response.jsonBody()
 
 print(request.formatted())
 print(response.formatted())

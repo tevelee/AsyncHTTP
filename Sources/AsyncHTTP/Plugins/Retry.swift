@@ -10,13 +10,16 @@ public enum RetryStrategyOption: HTTPRequestOption {
 
 public struct RetryStrategyWrapper: Hashable {
     let wrapped: RetryStrategy
+    private var objectID: ObjectIdentifier {
+        ObjectIdentifier(type(of: wrapped))
+    }
 
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(type(of: wrapped)))
+        hasher.combine(objectID)
     }
 
     public static func == (lhs: RetryStrategyWrapper, rhs: RetryStrategyWrapper) -> Bool {
-        ObjectIdentifier(lhs.wrapped) == ObjectIdentifier(lhs.wrapped)
+        lhs.objectID == rhs.objectID
     }
 }
 

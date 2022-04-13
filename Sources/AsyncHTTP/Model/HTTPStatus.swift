@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public struct HTTPStatus: Equatable, Hashable, Codable {
     public let code: Int
