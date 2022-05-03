@@ -6,11 +6,11 @@ public protocol ConversionStrategy {
 }
 
 public protocol DecoderStrategy: ConversionStrategy {
-    static func decode(_ value: RawValue) -> ConvertedValue
+    static func decode(_ value: RawValue) throws -> ConvertedValue
 }
 
 public protocol EncoderStrategy: ConversionStrategy {
-    static func encode(_ value: ConvertedValue) -> RawValue
+    static func encode(_ value: ConvertedValue) throws -> RawValue
 }
 
 public typealias TwoWayConversionStrategy = EncoderStrategy & DecoderStrategy
@@ -31,14 +31,14 @@ extension Converted: Decodable where Converter.RawValue: Decodable, Converter: D
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(Converter.RawValue.self)
-        let decodedValue = Converter.decode(rawValue)
+        let decodedValue = try Converter.decode(rawValue)
         self.init(wrappedValue: decodedValue)
     }
 }
 
 extension Converted: Encodable where Converter.RawValue: Encodable, Converter: EncoderStrategy {
     public func encode(to encoder: Encoder) throws {
-        let rawValue = Converter.encode(wrappedValue)
+        let rawValue = try Converter.encode(wrappedValue)
         try rawValue.encode(to: encoder)
     }
 }
@@ -49,14 +49,14 @@ extension Optional: ConversionStrategy where Wrapped: ConversionStrategy {
 }
 
 extension Optional: EncoderStrategy where Wrapped: EncoderStrategy {
-    public static func encode(_ value: Wrapped.ConvertedValue?) -> Wrapped.RawValue? {
-        value.map(Wrapped.encode)
+    public static func encode(_ value: Wrapped.ConvertedValue?) throws -> Wrapped.RawValue? {
+        try value.map(Wrapped.encode)
     }
 }
 
 extension Optional: DecoderStrategy where Wrapped: DecoderStrategy {
-    public static func decode(_ value: Wrapped.RawValue?) -> Wrapped.ConvertedValue? {
-        value.map(Wrapped.decode)
+    public static func decode(_ value: Wrapped.RawValue?) throws -> Wrapped.ConvertedValue? {
+        try value.map(Wrapped.decode)
     }
 }
 

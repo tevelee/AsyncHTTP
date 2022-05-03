@@ -82,7 +82,12 @@ private struct ISO8601: TwoWayConversionStrategy {
         formatter.string(from: value)
     }
 
-    static func decode(_ value: String) -> Date {
-        formatter.date(from: value)!
+    static func decode(_ value: String) throws -> Date {
+        guard let date = formatter.date(from: value) else {
+            throw ConversionError()
+        }
+        return date
     }
+
+    struct ConversionError: Error {}
 }
