@@ -4,7 +4,7 @@ import XCTest
 final class HTTPFormatterTests: XCTestCase {
     func test_whenFormattingRequestWithCURL_thenOutputsTheCorrectFormat() throws {
         // Given
-        let request = try HTTPRequest(url: URL(string: "https://google.com")!)!.configured { request in
+        let request = try HTTPRequest(method: .post, url: URL(string: "https://google.com")!)!.configured { request in
             request[header: .userAgent] = "Safari"
             request.body = try .json(["a": "b", "c": 1])
         }
@@ -13,7 +13,7 @@ final class HTTPFormatterTests: XCTestCase {
         let output = request.formatted(using: .curl)
 
         // Then
-        XCTAssertEqual(output, #"curl --request GET --header "Content-Type: application/json; charset=\"utf-8\"" --header "User-Agent: Safari" --data "{"a":"b","c":1}" https://google.com"#)
+        XCTAssertEqual(output, #"curl --request POST --header "Content-Type: application/json; charset=\"utf-8\"" --header "User-Agent: Safari" --data "{\"a\":\"b\",\"c\":1}" "https://google.com""#)
     }
 
     func test_whenFormattingRequestWithStandardHTTPFormat_thenOutputsTheCorrectFormat() throws {

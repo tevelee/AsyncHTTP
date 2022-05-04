@@ -28,13 +28,14 @@ public class CURLHTTPRequestFormatter: Formatter {
         var result: String = "curl"
         result += " --request \(request.method.httpFormatted())"
         for (key, value) in request.headers.sorted(by: \.key.name) {
-            result += " --header \"\(key.httpFormatted()): \(value.httpFormatted().replacingOccurrences(of: #"""#, with: #"\""#))\""
+            let header = "\(key.httpFormatted()): \(value.httpFormatted())"
+            result += " --header \(header.quoted())"
         }
         let body = request.body.httpFormatted()
         if !body.isEmpty {
-            result += " --data \"\(body)\""
+            result += " --data \(body.quoted())"
         }
-        result += " \(url.httpFormatted())"
+        result += " \(url.httpFormatted().quoted())"
         return result
     }
 }
@@ -52,5 +53,15 @@ public class StandardHTTPRequestFormatter: Formatter {
         }
         result += "\n\(request.body.httpFormatted())"
         return result
+    }
+}
+
+private extension String {
+    func quoted(using character: Character = #"""#) -> String {
+        "\(character)\(escaping(character: character))\(character)"
+    }
+
+    func escaping(character: Character) -> String {
+        replacingOccurrences(of: String(character), with: "\\\(character)")
     }
 }
