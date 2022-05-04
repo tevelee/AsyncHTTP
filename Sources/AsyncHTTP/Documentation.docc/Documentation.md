@@ -64,6 +64,11 @@ AsyncHTTP
 - ``Formattible``
 - ``DefaultFormattible``
 
+### Validation
+
+- ``LoaderValidationError``
+- ``RequestValidationError``
+
 ### Utils
 
 - ``Converted``

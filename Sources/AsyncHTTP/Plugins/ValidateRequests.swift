@@ -18,17 +18,24 @@ extension Loaders {
             let output = try await upstream.load(request)
             let type = String(describing: type(of: self))
             if request.timeout != nil, !type.contains("ApplyTimeout<") {
-                throw Self.Error.loaderShouldContainApplyTimeout
+                throw LoaderValidationError.loaderShouldContainApplyTimeout
             }
             if request.retryStrategy != nil, !type.contains("ApplyRetryStrategy<") {
-                throw Self.Error.loaderShouldContainApplyRetryStrategy
+                throw LoaderValidationError.loaderShouldContainApplyRetryStrategy
+            }
+            if request.method == .get, !request.body.content.isEmpty {
+                throw RequestValidationError.requestWithGETMethodShouldNotHaveBody
             }
             return output
         }
-
-        public enum Error: Swift.Error {
-            case loaderShouldContainApplyTimeout
-            case loaderShouldContainApplyRetryStrategy
-        }
     }
+}
+
+public enum LoaderValidationError: Error {
+    case loaderShouldContainApplyTimeout
+    case loaderShouldContainApplyRetryStrategy
+}
+
+public enum RequestValidationError: Error {
+    case requestWithGETMethodShouldNotHaveBody
 }

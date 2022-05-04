@@ -20,7 +20,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         let request = try HTTPRequest().configured {
             $0.serverEnvironment = .production
             $0.path = "endpoint"
-            $0.method = .get
+            $0.method = .post
             $0.body = try .json(["a": "b"])
             $0[header: .accept] = .application.json.appending(.characterSet, value: .utf8)
             $0[header: .authorization] = .bearer(token: "token")
@@ -55,7 +55,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
 
         // Then
         XCTAssertEqual(request.url?.absoluteString, "https://prod.example.com/v1/endpoint?q=search&sid=1")
-        XCTAssertEqual(request.method, "GET")
+        XCTAssertEqual(request.method, "POST")
         XCTAssertEqual(request[header: "Accept"], "application/json; charset=\"utf-8\"")
         XCTAssertEqual(request[header: "Authorization"], "Bearer token")
         XCTAssertEqual(request[header: "X-API-KEY"], "test")
@@ -123,6 +123,25 @@ final class HTTPNetworkExecutorTests: XCTestCase {
 
         // Then
         XCTAssertEqual(loadedRequest?.cachePolicy, .returnCacheDataElseLoad)
+    }
+
+    func test_getWithBody_shouldThrowError() async throws {
+        // Given
+        let loader = testLoader.validateRequests()
+        let request = HTTPRequest().configured {
+            $0.body = .string("test")
+        }
+
+        do {
+            // When
+            _ = try await loader.load(request)
+        } catch let error as RequestValidationError {
+            // Then
+            XCTAssertEqual(error, .requestWithGETMethodShouldNotHaveBody)
+        } catch {
+            XCTFail("Should have thrown validation error")
+        }
+
     }
 }
 
