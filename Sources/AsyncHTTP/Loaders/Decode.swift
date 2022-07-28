@@ -4,12 +4,28 @@ import Combine
 import Foundation
 
 extension Loader where Output: Decodable {
-    public func decode<DecodedOutput, Decoder: TopLevelDecoder>(using decoder: Decoder, to type: DecodedOutput.Type = DecodedOutput.self) -> Loaders.Decoded<Self, DecodedOutput, Decoder> where Decoder.Input == Output {
-        Loaders.Decoded<Self, DecodedOutput, Decoder>(self, decoder: decoder)
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func decode<DecodedOutput: Decodable, Decoder: TopLevelDecoder>(using decoder: Decoder, to type: DecodedOutput.Type = DecodedOutput.self) -> some Loader<Input, DecodedOutput> where Decoder.Input == Output {
+        Loaders.Decoded(self, decoder: decoder)
     }
+#endif
 
-    public func decode<DecodedOutput>(using decoder: JSONDecoder = JSONDecoder(), to type: DecodedOutput.Type = DecodedOutput.self) -> Loaders.Decoded<Self, DecodedOutput, JSONDecoder> {
-        Loaders.Decoded<Self, DecodedOutput, JSONDecoder>(self, decoder: decoder)
+    public func decode<DecodedOutput: Decodable, Decoder: TopLevelDecoder>(using decoder: Decoder, to type: DecodedOutput.Type = DecodedOutput.self) -> Loaders.Decoded<Self, DecodedOutput, Decoder> where Decoder.Input == Output {
+        .init(self, decoder: decoder)
+    }
+}
+
+extension Loader where Output == Data {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func decode<DecodedOutput: Decodable>(using decoder: JSONDecoder = JSONDecoder(), to type: DecodedOutput.Type = DecodedOutput.self) -> some Loader<Input, DecodedOutput> {
+        Loaders.Decoded(self, decoder: decoder)
+    }
+#endif
+
+    public func decode<DecodedOutput: Decodable>(using decoder: JSONDecoder = JSONDecoder(), to type: DecodedOutput.Type = DecodedOutput.self) -> Loaders.Decoded<Self, DecodedOutput, JSONDecoder> {
+        .init(self, decoder: decoder)
     }
 }
 

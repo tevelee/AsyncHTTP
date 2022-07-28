@@ -19,13 +19,23 @@ extension URLSession {
 #endif
 
 extension URLSession {
+#if compiler(>=5.7)
+    public var dataLoader: some Loader<URLRequest, (Data, URLResponse)> {
+        Loaders.URLSessionData(urlSession: self)
+    }
+
+    public var httpLoader: some HTTPLoader {
+        dataLoader.httpLoader()
+    }
+#else
     public var dataLoader: Loaders.URLSessionData {
-        .init(urlSession: self)
+        Loaders.URLSessionData(urlSession: self)
     }
 
     public var httpLoader: Loaders.HTTP<Loaders.URLSessionData> {
         dataLoader.httpLoader()
     }
+#endif
 }
 
 extension Loaders {

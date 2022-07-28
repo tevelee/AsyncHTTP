@@ -19,8 +19,15 @@ extension HTTPRequest: Identifiable {
     }
 }
 
-extension Loader {
-    public func identifyRequests(generateIdentifier: @escaping (HTTPRequest) -> String = { _ in UUID().uuidString }) -> Loaders.ApplyRequestIdentity<Self> where Input == HTTPRequest {
+extension Loader where Input == HTTPRequest {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func identifyRequests(generateIdentifier: @escaping (HTTPRequest) -> String = { _ in UUID().uuidString }) -> some Loader<HTTPRequest, Output> {
+        Loaders.ApplyRequestIdentity(loader: self, generateIdentifier: generateIdentifier)
+    }
+#endif
+
+    public func identifyRequests(generateIdentifier: @escaping (HTTPRequest) -> String = { _ in UUID().uuidString }) -> Loaders.ApplyRequestIdentity<Self> {
         .init(loader: self, generateIdentifier: generateIdentifier)
     }
 }
@@ -44,5 +51,3 @@ extension Loaders {
         }
     }
 }
-
-extension Loaders.ApplyRequestIdentity: HTTPLoader where Output == HTTPResponse {}

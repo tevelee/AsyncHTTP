@@ -1,8 +1,15 @@
 import Foundation
 
 extension Loader {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func pullback<NewInput>(transform: @escaping (NewInput) -> Input) -> some Loader<NewInput, Output> {
+        Loaders.Pullback(self, transform)
+    }
+#endif
+
     public func pullback<NewInput>(transform: @escaping (NewInput) -> Input) -> Loaders.Pullback<Self, NewInput> {
-        Loaders.Pullback<Self, NewInput>(self, transform)
+        .init(self, transform)
     }
 }
 
@@ -18,7 +25,7 @@ extension Loaders {
             self.transform = transform
         }
 
-        public func load(_ input: Input) async throws -> Output {
+        public func load(_ input: Input) async rethrows -> Output {
             try await downstream.load(transform(input))
         }
     }

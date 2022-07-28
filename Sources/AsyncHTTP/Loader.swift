@@ -3,11 +3,19 @@ import Foundation
 import FoundationNetworking
 #endif
 
-public protocol Loader {
+#if compiler(>=5.7)
+@rethrows public protocol Loader<Input, Output> {
     associatedtype Input
     associatedtype Output
     func load(_ input: Input) async throws -> Output
 }
+#else
+@rethrows public protocol Loader {
+    associatedtype Input
+    associatedtype Output
+    func load(_ input: Input) async throws -> Output
+}
+#endif
 
 extension Loader {
     public func loadResult(_ input: Input) async -> Result<Output, Error> {

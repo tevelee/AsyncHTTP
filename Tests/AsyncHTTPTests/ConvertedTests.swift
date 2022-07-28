@@ -45,11 +45,11 @@ final class ConvertedTests: XCTestCase {
         let encoded = try encoder.encode(Request(date: Date(timeIntervalSince1970: 0)))
 
         // Then
-        XCTAssertEqual(encoded, #"""
+        XCTAssertEqual(encoded.string, #"""
         {
           "date" : "1970-01-01T00:00:00Z"
         }
-        """#.data)
+        """#)
     }
 
     func test_whenEncodingOptionalConvertedProperty_thenEncodesCorrectly() throws {
@@ -62,13 +62,36 @@ final class ConvertedTests: XCTestCase {
         let encoded = try JSONEncoder().encode(Request())
 
         // Then
-        XCTAssertEqual(encoded, "{}".data)
+        XCTAssertEqual(encoded.string, "{}")
+    }
+
+    func test_whenDecodingConvertedPropertyWithComposition_thenDecodesCorrectly() throws {
+        // Given
+        struct Response: Decodable {
+            @Converted<Composed<ISO8601, Day>> var day: Int
+        }
+
+        // When
+        let decoded = try JSONDecoder().decode(Response.self, from: #"""
+        {
+          "day": "1970-01-13T00:00:00Z"
+        }
+        """#.data)
+
+        // Then
+        XCTAssertEqual(decoded.day, 13)
     }
 }
 
 extension String {
     var data: Data {
         Data(utf8)
+    }
+}
+
+extension Data {
+    var string: String? {
+        String(data: self, encoding: .utf8)
     }
 }
 
@@ -90,4 +113,13 @@ private struct ISO8601: TwoWayConversionStrategy {
     }
 
     struct ConversionError: Error {}
+}
+
+private struct Day: DecoderStrategy {
+    typealias RawValue = Date
+    typealias ConvertedValue = Int
+
+    static func decode(_ value: Date) throws -> Int {
+        Calendar(identifier: .gregorian).dateComponents([.day], from: value).day!
+    }
 }

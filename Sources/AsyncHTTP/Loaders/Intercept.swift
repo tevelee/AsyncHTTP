@@ -1,8 +1,15 @@
 import Foundation
 
 extension Loader {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func intercept(transform: @escaping (inout Input) -> Void) -> some Loader<Input, Output> {
+        Loaders.Intercept(self, transform: transform)
+    }
+#endif
+
     public func intercept(transform: @escaping (inout Input) -> Void) -> Loaders.Intercept<Self> {
-        Loaders.Intercept<Self>(self, transform: transform)
+        .init(self, transform: transform)
     }
 }
 
@@ -20,7 +27,7 @@ extension Loaders {
             self.transform = transform
         }
 
-        public func load(_ input: Input) async throws -> Output {
+        public func load(_ input: Input) async rethrows -> Output {
             var modified = input
             transform?(&modified)
             return try await original.load(modified)

@@ -1,13 +1,31 @@
 import Foundation
 
 extension Loader {
-    public func map<NewOutput>(_ transform: @escaping (Output) throws -> NewOutput) -> Loaders.Map<Self, NewOutput> {
-        Loaders.Map<Self, NewOutput>(self, transform)
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func map<NewOutput>(_ transform: @escaping (Output) throws -> NewOutput) -> some Loader<Input, NewOutput> {
+        Loaders.ThrowingMap(self, transform)
+    }
+#endif
+
+    public func map<NewOutput>(_ transform: @escaping (Output) throws -> NewOutput) -> Loaders.ThrowingMap<Self, NewOutput> {
+        .init(self, transform)
+    }
+
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func map<NewOutput>(_ transform: @escaping (Output) -> NewOutput) -> some Loader<Input, NewOutput> {
+        Loaders.Map(self, transform)
+    }
+#endif
+
+    public func map<NewOutput>(_ transform: @escaping (Output) -> NewOutput) -> Loaders.Map<Self, NewOutput> {
+        .init(self, transform)
     }
 }
 
 extension Loaders {
-    public struct Map<Upstream: Loader, Output>: Loader {
+    public struct ThrowingMap<Upstream: Loader, Output>: Loader {
         public typealias Input = Upstream.Input
 
         private let upstream: Upstream
@@ -22,6 +40,20 @@ extension Loaders {
             try await transform(upstream.load(input))
         }
     }
-}
 
-extension Loaders.Map: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}
+    public struct Map<Upstream: Loader, Output>: Loader {
+        public typealias Input = Upstream.Input
+
+        private let upstream: Upstream
+        private let transform: (Upstream.Output) -> Output
+
+        init(_ upstream: Upstream, _ transform: @escaping (Upstream.Output) -> Output) {
+            self.upstream = upstream
+            self.transform = transform
+        }
+
+        public func load(_ input: Input) async rethrows -> Output {
+            try await transform(upstream.load(input))
+        }
+    }
+}

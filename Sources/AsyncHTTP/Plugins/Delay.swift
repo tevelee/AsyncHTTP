@@ -1,6 +1,13 @@
 import Foundation
 
 extension Loader {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func delay(seconds: TimeInterval) -> some Loader<Input, Output> {
+        Loaders.Delay(loader: self, seconds: seconds)
+    }
+#endif
+
     public func delay(seconds: TimeInterval) -> Loaders.Delay<Self> {
         .init(loader: self, seconds: seconds)
     }
@@ -26,5 +33,3 @@ extension Loaders {
         }
     }
 }
-
-extension Loaders.Delay: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}

@@ -72,21 +72,33 @@ extension RetryStrategy where Self == Backoff {
     }
 }
 
-@available(iOS 15.0, macOS 12.0, *)
 extension Loader {
-    @available(iOS 15.0, macOS 12.0, *)
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func applyRetryStrategy(default: RetryStrategy? = nil) -> some Loader<Input, Output> {
+        Loaders.ApplyRetryStrategy(loader: self) { _ in `default` }
+    }
+#endif
+
     public func applyRetryStrategy(default: RetryStrategy? = nil) -> Loaders.ApplyRetryStrategy<Self> {
         .init(loader: self) { _ in `default` }
     }
+}
 
-    @available(iOS 15.0, macOS 12.0, *)
-    public func applyRetryStrategy(default: RetryStrategy? = nil) -> Loaders.ApplyRetryStrategy<Self> where Input == HTTPRequest {
+extension Loader where Input == HTTPRequest {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func applyRetryStrategy(default: RetryStrategy? = nil) -> some Loader<HTTPRequest, Output> {
+        Loaders.ApplyRetryStrategy(loader: self) { $0.retryStrategy ?? `default` }
+    }
+#endif
+
+    public func applyRetryStrategy(default: RetryStrategy? = nil) -> Loaders.ApplyRetryStrategy<Self> {
         .init(loader: self) { $0.retryStrategy ?? `default` }
     }
 }
 
 extension Loaders {
-    @available(iOS 15.0, macOS 12.0, *)
     public struct ApplyRetryStrategy<Wrapped: Loader>: CompositeLoader {
         private let loader: Wrapped
         private let retryStrategy: (Input) -> RetryStrategy?
@@ -117,6 +129,3 @@ extension Loaders {
         }
     }
 }
-
-@available(iOS 15.0, macOS 12.0, *)
-extension Loaders.ApplyRetryStrategy: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}

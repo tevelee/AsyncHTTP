@@ -1,6 +1,13 @@
 import Foundation
 
 extension Loader {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func deduplicate() -> some Loader<Input, Output> where Input: Hashable {
+        Loaders.Deduplicate(loader: self)
+    }
+#endif
+
     public func deduplicate() -> Loaders.Deduplicate<Self> where Input: Hashable {
         .init(loader: self)
     }
@@ -30,5 +37,3 @@ extension Loaders {
         }
     }
 }
-
-extension Loaders.Deduplicate: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}

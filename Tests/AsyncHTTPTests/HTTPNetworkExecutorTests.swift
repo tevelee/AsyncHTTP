@@ -32,7 +32,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
             $0.retryStrategy = .immediately(maximumNumberOfAttempts: 5)
         }
         var loadedRequest: HTTPRequest?
-        let loader: some HTTPLoader = testLoader
+        let loader = testLoader
             .capture { loadedRequest = $0 }
             .applyServerEnvironment()
             .applyTimeout()
@@ -66,18 +66,18 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         XCTAssertEqual(loadedRequest?.id, response.id)
     }
 
-    func test_whenDecodingResponse_thenItSucceeds() async throws {
+    func test_whenDecodingResponse_thenItSucceeds() throws {
         // Given
         struct CustomResponse: Decodable, Equatable {
             let key: String
         }
-        let loader: some HTTPLoader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy(headers: [
+        let loader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy(headers: [
             "User-Agent": "X",
             "Set-Cookie": "a=b; Domain=google.com; Path=/; Secure; HttpOnly"
         ]))
 
         // When
-        let response = try await loader.load(HTTPRequest())
+        let response = loader.load(HTTPRequest())
 
         // Then
         XCTAssertEqual(try response.jsonBody(), CustomResponse(key: "value"))
@@ -90,7 +90,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         struct CustomResponse: Decodable, Equatable {
             let key: String
         }
-        let httpLoader: some HTTPLoader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy())
+        let httpLoader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy())
         let loader: AnyLoader<HTTPRequest, CustomResponse> = httpLoader
             .map(\.body)
             .decode()

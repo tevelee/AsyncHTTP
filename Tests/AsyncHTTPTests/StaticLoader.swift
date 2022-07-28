@@ -14,6 +14,3 @@ struct StaticLoader: Loader {
         HTTPResponse(request: request, response: response, body: data)
     }
 }
-
-extension StaticLoader: HTTPLoader {}
-

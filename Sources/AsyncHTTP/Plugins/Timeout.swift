@@ -39,11 +39,27 @@ extension HTTPRequest {
 }
 
 extension Loader {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func applyTimeout(default: Timeout? = nil) -> some Loader<Input, Output> {
+        Loaders.ApplyTimeout(loader: self) { _ in `default` }
+    }
+#endif
+
     public func applyTimeout(default: Timeout? = nil) -> Loaders.ApplyTimeout<Self> {
         .init(loader: self) { _ in `default` }
     }
+}
 
-    public func applyTimeout(default: Timeout? = nil) -> Loaders.ApplyTimeout<Self> where Input == HTTPRequest {
+extension Loader where Input == HTTPRequest {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func applyTimeout(default: Timeout? = nil) -> some Loader<HTTPRequest, Output> {
+        Loaders.ApplyTimeout(loader: self) { $0.timeout ?? `default` }
+    }
+#endif
+
+    public func applyTimeout(default: Timeout? = nil) -> Loaders.ApplyTimeout<Self> {
         .init(loader: self) { $0.timeout ?? `default` }
     }
 }
@@ -76,8 +92,6 @@ extension Loaders {
         }
     }
 }
-
-extension Loaders.ApplyTimeout: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}
 
 extension Task where Success == Never, Failure == Never {
     public static func sleep(seconds: TimeInterval) async throws {

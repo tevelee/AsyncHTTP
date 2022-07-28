@@ -1,6 +1,13 @@
 import Foundation
 
 extension Loader {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func throttle(maximumNumberOfRequests: UInt = UInt.max) -> some Loader<Input, Output> where Input: Hashable {
+        Loaders.Throttle(loader: self, maximumNumberOfRequests: maximumNumberOfRequests)
+    }
+#endif
+
     public func throttle(maximumNumberOfRequests: UInt = UInt.max) -> Loaders.Throttle<Self> where Input: Hashable {
         .init(loader: self, maximumNumberOfRequests: maximumNumberOfRequests)
     }
@@ -28,8 +35,6 @@ extension Loaders {
         }
     }
 }
-
-extension Loaders.Throttle: HTTPLoader where Input == HTTPRequest, Output == HTTPResponse {}
 
 @propertyWrapper
 final class Published<Element>: AsyncSequence {

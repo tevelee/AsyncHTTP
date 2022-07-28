@@ -79,3 +79,22 @@ public extension KeyedEncodingContainer {
         }
     }
 }
+
+public struct Composed<A, B> {}
+
+extension Composed: ConversionStrategy where A: ConversionStrategy, B: ConversionStrategy {
+    public typealias RawValue = A.RawValue
+    public typealias ConvertedValue = B.ConvertedValue
+}
+
+extension Composed: EncoderStrategy where A: EncoderStrategy, B: EncoderStrategy, A.ConvertedValue == B.RawValue {
+    public static func encode(_ value: B.ConvertedValue) throws -> A.RawValue {
+        try A.encode(B.encode(value))
+    }
+}
+
+extension Composed: DecoderStrategy where A: DecoderStrategy, B: DecoderStrategy, A.ConvertedValue == B.RawValue {
+    public static func decode(_ value: A.RawValue) throws -> B.ConvertedValue {
+        try B.decode(A.decode(value))
+    }
+}

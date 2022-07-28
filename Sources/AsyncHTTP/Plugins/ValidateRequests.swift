@@ -1,21 +1,28 @@
 import Foundation
 
 extension Loader where Input == HTTPRequest, Output == HTTPResponse {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func validateRequests() -> some Loader<Input, Output> {
+        Loaders.ValidateRequests(loader: self)
+    }
+#endif
+
     public func validateRequests() -> Loaders.ValidateRequests<Self> {
-        Loaders.ValidateRequests<Self>(self)
+        .init(loader: self)
     }
 }
 
 extension Loaders {
-    public struct ValidateRequests<Upstream: Loader>: HTTPLoader where Upstream.Input == HTTPRequest, Upstream.Output == HTTPResponse {
-        private let upstream: Upstream
+    public struct ValidateRequests<Upstream: Loader>: Loader where Upstream.Input == HTTPRequest, Upstream.Output == HTTPResponse {
+        private let loader: Upstream
 
-        init(_ upstream: Upstream) {
-            self.upstream = upstream
+        public init(loader: Upstream) {
+            self.loader = loader
         }
 
         public func load(_ request: HTTPRequest) async throws -> HTTPResponse {
-            let output = try await upstream.load(request)
+            let output = try await loader.load(request)
             let type = String(describing: type(of: self))
             if request.timeout != nil, !type.contains("ApplyTimeout<") {
                 throw LoaderValidationError.loaderShouldContainApplyTimeout

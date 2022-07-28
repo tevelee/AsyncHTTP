@@ -1,8 +1,15 @@
 import Foundation
 
 extension Loader {
-    public func pipe<Other: Loader>(_ other: Other) -> Loaders.Pipe<Self, Other> {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func pipe<Other: Loader>(_ other: Other) -> some Loader<Input, Other.Output> where Output == Other.Input {
         Loaders.Pipe(self, other)
+    }
+#endif
+
+    public func pipe<Other: Loader>(_ other: Other) -> Loaders.Pipe<Self, Other> where Output == Other.Input {
+        .init(self, other)
     }
 }
 
@@ -19,7 +26,7 @@ extension Loaders {
             self.downstream = downstream
         }
 
-        public func load(_ input: Input) async throws -> Output {
+        public func load(_ input: Input) async rethrows -> Output {
             try await downstream.load(upstream.load(input))
         }
     }

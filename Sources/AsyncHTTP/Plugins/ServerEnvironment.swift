@@ -41,6 +41,13 @@ extension HTTPRequest {
 }
 
 extension Loader where Input == HTTPRequest {
+#if compiler(>=5.7)
+    @_disfavoredOverload
+    public func applyServerEnvironment(defaultEnvironment: ServerEnvironment? = nil) -> some Loader<HTTPRequest, Output> {
+        Loaders.ApplyServerEnvironment(loader: self)
+    }
+#endif
+
     public func applyServerEnvironment(defaultEnvironment: ServerEnvironment? = nil) -> Loaders.ApplyServerEnvironment<Self> {
         .init(loader: self)
     }
@@ -64,8 +71,6 @@ extension Loaders {
         }
     }
 }
-
-extension Loaders.ApplyServerEnvironment: HTTPLoader where Output == HTTPResponse {}
 
 private func +(lhs: [URLQueryItem]?, rhs: [URLQueryItem]?) -> [URLQueryItem]? {
     switch (lhs, rhs) {
