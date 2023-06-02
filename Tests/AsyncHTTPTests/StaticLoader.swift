@@ -1,16 +1,29 @@
 @testable import AsyncHTTP
 import Foundation
 
-struct StaticLoader: Loader {
-    let data: Data
-    let response: HTTPURLResponse
+final class StaticLoader: Loader {
+    typealias Response = (data: Data, response: HTTPURLResponse)
 
-    init(_ data: Data, _ response: HTTPURLResponse) {
-        self.data = data
-        self.response = response
+    var index = 0
+    let responses: [Response]
+
+    init(_ response: Response, _ responses: Response...) {
+        self.responses = [response] + responses
+    }
+
+    init(data: Data, response: HTTPURLResponse) {
+        self.responses = [(data, response)]
     }
 
     func load(_ request: HTTPRequest) -> HTTPResponse {
-        HTTPResponse(request: request, response: response, body: data)
+        defer {
+            if index == responses.count - 1 {
+                index = 0
+            } else {
+                index += 1
+            }
+        }
+        let response = responses[index]
+        return HTTPResponse(request: request, response: response.response, body: response.data)
     }
 }

@@ -84,7 +84,7 @@ extension HTTPRequestBody: ExpressibleByStringLiteral {
         }
         data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
 
-        return .data(data, contentType: .multipart.appending(.boundary, value: boundary))
+        return .data(data, contentType: .multipart.formData.appending(.boundary, value: boundary))
     }
 
     public struct Part {

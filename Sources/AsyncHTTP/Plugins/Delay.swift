@@ -11,6 +11,11 @@ extension Loader {
     public func delay(seconds: TimeInterval) -> Loaders.Delay<Self> {
         .init(loader: self, seconds: seconds)
     }
+
+    @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+    public func delay(seconds: TimeInterval, clock: some Clock<Duration>) -> Loaders.Delay<Self> {
+        .init(loader: self, seconds: seconds, wait: clock.sleep)
+    }
 }
 
 extension Loaders {

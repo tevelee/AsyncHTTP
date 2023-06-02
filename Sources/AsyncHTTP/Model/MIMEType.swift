@@ -72,7 +72,9 @@ extension MIMEType {
     public static let image = Image.self
 
     public static let formData: Self = "form-data"
-    public static let multipart: Self = "multipart/form-data"
+
+    public enum Multipart {}
+    public static let multipart = Multipart.self
 }
 
 extension MIMEType.Application {
@@ -103,6 +105,10 @@ extension MIMEType.Image {
     public static let gif: MIMEType = "image/gif"
     public static let png: MIMEType = "image/png"
     public static let webp: MIMEType = "image/webp"
+}
+
+extension MIMEType.Multipart {
+    public static let formData: MIMEType = "multipart/form-data"
 }
 
 extension MIMEType {

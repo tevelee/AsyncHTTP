@@ -62,6 +62,11 @@ extension Loader where Input == HTTPRequest {
     public func applyTimeout(default: Timeout? = nil) -> Loaders.ApplyTimeout<Self> {
         .init(loader: self) { $0.timeout ?? `default` }
     }
+
+    @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+    public func applyTimeout(default: Timeout? = nil, clock: some Clock<Duration>) -> Loaders.ApplyTimeout<Self> {
+        .init(loader: self) { $0.timeout ?? `default` } wait: { try await clock.sleep(seconds: $0) }
+    }
 }
 
 extension Loaders {
@@ -93,13 +98,7 @@ extension Loaders {
     }
 }
 
-extension Task where Success == Never, Failure == Never {
-    public static func sleep(seconds: TimeInterval) async throws {
-        try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-    }
-}
-
-extension TimeInterval {
+private extension TimeInterval {
     init?(dispatchTimeInterval: DispatchTimeInterval) {
         switch dispatchTimeInterval {
             case .seconds(let value):

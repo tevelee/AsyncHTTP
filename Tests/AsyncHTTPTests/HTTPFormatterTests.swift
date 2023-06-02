@@ -6,7 +6,7 @@ final class HTTPFormatterTests: XCTestCase {
         // Given
         let request = try HTTPRequest(method: .post, url: URL(string: "https://google.com")!)!.configured { request in
             request[header: .userAgent] = "Safari"
-            request.body = try .json(["a": "b", "c": 1])
+            request.body = try .json(["a": "b", "c": 1] as [String: Any])
         }
 
         // When
@@ -20,7 +20,7 @@ final class HTTPFormatterTests: XCTestCase {
         // Given
         let request = try HTTPRequest(url: URL(string: "https://google.com")!)!.configured { request in
             request[header: .userAgent] = "Safari"
-            request.body = try .json(["a": "b", "c": 1], options: [.sortedKeys, .prettyPrinted])
+            request.body = try .json(["a": "b", "c": 1] as [String: Any], options: [.sortedKeys, .prettyPrinted])
         }
 
         // When

@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol RetryStrategy: AnyObject {
-    func retryDelay(for result: Error, numberOfPreviousAttempts: Int) -> TimeInterval?
+    func retryDelay(for error: Error, numberOfPreviousAttempts: Int) -> TimeInterval?
 }
 
 public enum RetryStrategyOption: HTTPRequestOption {
@@ -31,14 +31,24 @@ extension HTTPRequest {
 }
 
 public final class Backoff: RetryStrategy {
-    private let strategyImplementation: (_ numberOfPreviousAttempts: Int) -> TimeInterval?
+    private let strategyImplementation: (_ error: Error, _ numberOfPreviousAttempts: Int) -> TimeInterval?
 
-    init(strategyImplementation: @escaping (Int) -> TimeInterval?) {
+    init(strategyImplementation: @escaping (Error, Int) -> TimeInterval?) {
         self.strategyImplementation = strategyImplementation
     }
 
-    public func retryDelay(for result: Error, numberOfPreviousAttempts: Int) -> TimeInterval? {
-        strategyImplementation(numberOfPreviousAttempts)
+    public func retryDelay(for error: Error, numberOfPreviousAttempts: Int) -> TimeInterval? {
+        strategyImplementation(error, numberOfPreviousAttempts)
+    }
+
+    public func filter(_ condition: @escaping (Error) -> Bool) -> Backoff {
+        Backoff { [strategyImplementation] error, numberOfPreviousAttempts in
+            if condition(error) {
+                return strategyImplementation(error, numberOfPreviousAttempts)
+            } else {
+                return nil
+            }
+        }
     }
 }
 
@@ -47,19 +57,19 @@ extension RetryStrategy where Self == Backoff {
         .constant(delay: 0, maximumNumberOfAttempts: maximumNumberOfAttempts)
     }
     public static func constant(delay: TimeInterval, maximumNumberOfAttempts: Int) -> Backoff {
-        Backoff { numberOfPreviousAttempts in
+        Backoff { _, numberOfPreviousAttempts in
             guard numberOfPreviousAttempts < maximumNumberOfAttempts else { return nil }
             return delay
         }
     }
     public static func exponential(delay: TimeInterval, base: Int = 2, maximumNumberOfAttempts: Int) -> Backoff {
-        Backoff { numberOfPreviousAttempts in
+        Backoff { _, numberOfPreviousAttempts in
             guard numberOfPreviousAttempts < maximumNumberOfAttempts else { return nil }
             return pow(Double(base), Double(numberOfPreviousAttempts - 1))
         }
     }
     public static func fibonacci(maximumNumberOfAttempts: Int) -> Backoff {
-        return Backoff { numberOfPreviousAttempts in
+        return Backoff { _, numberOfPreviousAttempts in
             func fibonacci(n: Int) -> Int {
                 switch n {
                     case ...0: return 0
@@ -95,6 +105,11 @@ extension Loader where Input == HTTPRequest {
 
     public func applyRetryStrategy(default: RetryStrategy? = nil) -> Loaders.ApplyRetryStrategy<Self> {
         .init(loader: self) { $0.retryStrategy ?? `default` }
+    }
+
+    @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+    public func applyRetryStrategy(default: RetryStrategy? = nil, clock: some Clock<Duration>) -> Loaders.ApplyRetryStrategy<Self> {
+        .init(loader: self) { $0.retryStrategy ?? `default` } wait: { try await clock.sleep(seconds: $0) }
     }
 }
 

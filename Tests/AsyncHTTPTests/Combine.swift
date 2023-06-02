@@ -5,7 +5,7 @@ import XCTest
 import Combine
 
 final class CombineTests: XCTestCase {
-    private let testLoader = StaticLoader(Data(), .dummy())
+    private let testLoader = StaticLoader(data: Data(), response: .dummy())
 
     func test_combine() async throws {
         // Given

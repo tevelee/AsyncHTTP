@@ -2,7 +2,7 @@
 import XCTest
 
 final class HTTPNetworkExecutorTests: XCTestCase {
-    private let testLoader = StaticLoader(Data(), .dummy())
+    private let testLoader = StaticLoader(data: Data(), response: .dummy())
 
     func test_whenLoadingURLSessionLoader_thenCallsURLSessionDataTask() {
         // Given
@@ -16,6 +16,9 @@ final class HTTPNetworkExecutorTests: XCTestCase {
     }
 
     func test_whenLoadingUsingServerEnvironment_thenAppliesProperties() async throws {
+        struct InvalidResponseError: Error {
+            let statusCode: Int
+        }
         // Given
         let request = try HTTPRequest().configured {
             $0.serverEnvironment = .production
@@ -29,26 +32,34 @@ final class HTTPNetworkExecutorTests: XCTestCase {
             $0.addQueryParameter(name: "q", value: "search")
             $0.addQueryParameter(name: "sid", value: "1")
             $0.timeout = 1
-            $0.retryStrategy = .immediately(maximumNumberOfAttempts: 5)
+            $0.retryStrategy = .immediately(maximumNumberOfAttempts: 5).filter { error in
+                if let error = error as? InvalidResponseError {
+                    return (500..<600).contains(error.statusCode)
+                }
+                return true
+            }
         }
         var loadedRequest: HTTPRequest?
-        let loader = testLoader
-            .capture { loadedRequest = $0 }
-            .applyServerEnvironment()
-            .applyTimeout()
-            .applyRetryStrategy()
-            .map { response in
-                guard (200 ..< 300).contains(response.status.code) else {
-                    throw "not 2XX response code"
-                }
-                return response
+        let loader = StaticLoader(
+            (data: Data(), response: .dummy(statusCode: 503)),
+            (data: Data(), response: .dummy(statusCode: 200))
+        )
+        .capture { loadedRequest = $0 }
+        .applyServerEnvironment()
+        .applyTimeout()
+        .map { response in
+            guard (200 ..< 300).contains(response.status.code) else {
+                throw InvalidResponseError(statusCode: response.status.code)
             }
-            .intercept { $0.headers["X-Header"] = "value" }
-//            .delay(seconds: 10)
-            .deduplicate()
-            .throttle(maximumNumberOfRequests: 1)
-            .identifyRequests()
-            .validateRequests()
+            return response
+        }
+        .applyRetryStrategy()
+        .intercept { $0.headers["X-Header"] = "value" }
+//        .delay(seconds: 0)
+        .deduplicate()
+        .throttle(maximumNumberOfRequests: 1)
+        .identifyRequests()
+        .validateRequests()
 
         // When
         let response = try await loader.load(request)
@@ -71,7 +82,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         struct CustomResponse: Decodable, Equatable {
             let key: String
         }
-        let loader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy(headers: [
+        let loader = StaticLoader(data: Data(#"{"key": "value"}"#.utf8), response: .dummy(headers: [
             "User-Agent": "X",
             "Set-Cookie": "a=b; Domain=google.com; Path=/; Secure; HttpOnly"
         ]))
@@ -90,7 +101,7 @@ final class HTTPNetworkExecutorTests: XCTestCase {
         struct CustomResponse: Decodable, Equatable {
             let key: String
         }
-        let httpLoader = StaticLoader(Data(#"{"key": "value"}"#.utf8), .dummy())
+        let httpLoader = StaticLoader(data: Data(#"{"key": "value"}"#.utf8), response: .dummy())
         let loader: AnyLoader<HTTPRequest, CustomResponse> = httpLoader
             .map(\.body)
             .decode()
