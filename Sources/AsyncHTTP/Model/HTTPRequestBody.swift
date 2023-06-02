@@ -72,17 +72,24 @@ extension HTTPRequestBody: ExpressibleByStringLiteral {
         .init(content: try encoder.encode(object))
     }
 
+    @inlinable
     public static func multipart(boundary: String = UUID().uuidString, parts: [Part]) -> HTTPRequestBody {
         var data = Data()
+        let newline = "\r\n"
         for part in parts {
-            data.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
+            data.append(newline)
+            data.append("--\(boundary)")
+            data.append(newline)
             for header in part.body.additionalHeaders {
-                data.append("\(header.key.name):\(header.value)\r\n".data(using: .utf8)!)
+                data.append("\(header.key.name):\(header.value)")
+                data.append(newline)
             }
-            data.append("\r\n".data(using: .utf8)!)
+            data.append(newline)
             data.append(part.body.content)
         }
-        data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        data.append(newline)
+        data.append("--\(boundary)--")
+        data.append(newline)
 
         return .data(data, contentType: .multipart.formData.appending(.boundary, value: boundary))
     }
@@ -110,4 +117,9 @@ extension HTTPRequestBody: ExpressibleByStringLiteral {
     }
 }
 
-extension Data: @unchecked Sendable {}
+extension Data: @unchecked Sendable {
+    @inlinable
+    mutating func append(_ string: String) {
+        append(Data(string.utf8))
+    }
+}
