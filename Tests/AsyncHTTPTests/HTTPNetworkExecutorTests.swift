@@ -45,8 +45,9 @@ final class HTTPNetworkExecutorTests: XCTestCase {
             (data: Data(), response: .dummy(statusCode: 200))
         )
         .capture { loadedRequest = $0 }
+        .networkConstrained()
         .applyServerEnvironment()
-        .applyTimeout()
+        .applyTimeout(default: 60)
         .map { response in
             guard (200 ..< 300).contains(response.status.code) else {
                 throw InvalidResponseError(statusCode: response.status.code)
